@@ -1,2 +1,124 @@
 # ddexec_example
 Example of ddexec project in action using containers
+
+## Summary
+
+This project explores what [DDexec][ddexec] project can do using a read-only container.
+
+[Video here][video]
+
+Essentially:
+
+* even if you have a secure container:
+    * read-only filesystem
+    * noexec on any writable directory
+* you can run any readable file
+    * by injecting it into any currently running process
+    * hijacking the process to run your program
+* all that is needed is a way to download a remote file
+
+The author, [Yago][yago] implemented this in shell as a POC, but this could be implemented in any language.
+
+The [ddexec_test.bash](/ddexec_test.bash) script performs the following:
+
+1. tests if you have docker or podman on your system
+2. picks a container image:
+    1. For RHEL, CentOS Stream, and Fedora: [UBI9][ubi9]
+    2. For Ubuntu, alpine, and others: [alpine][alpine]
+3. checks for wget or curl
+4. copies fake.gz into the container [explained below](#fake_gz)
+5. Downloads ddexec to the container
+6. Tests the execution of fake.gz (should fail):
+    1. /tmp is mounted as noexec
+    2. the rest of the file system is read-only
+    3. the executable file is compressed (.gz)
+7. Tests the execution with ddexec - should succeed.
+
+It'll display a silly [cowsay][cowsay].
+
+[ddexec]: https://github.com/arget13/DDexec
+[ubi9]: https://catalog.redhat.com/software/base-images#get-images
+[alpine]: https://hub.docker.com/_/alpine
+[cowsay]: https://en.wikipedia.org/wiki/Cowsay
+[video]: https://youtu.be/7dc29U9DeIE?si=uygWoUGebKTZtZN3
+[yago]: https://github.com/arget13
+
+## Usage
+
+First, you need podman or docker
+
+```bash
+# install podman
+$ dnf install container-tools
+
+# -or- docker
+$ apt-get install docker
+```
+
+Then, you just run the bash script:
+
+```bash
+$ ./ddexec_test.bash
+Checking for podman or docker:: podman
+Starting READ-ONLY container with /tmp NOEXEC:: a31b298d0ad43f0fb64139cac8a314ac2bd0795e53bc5579a35ae22773f13d04
+Testing for curl or wget...: /usr/bin/curl
+downloading compressed binary from this host to container: : done
+downloading ddexec.sh from github: : done
+set /tmp/fake.gz to execute: done
+execute /tmp/fake.gz should fail: : Error: crun: open executable: Permission denied: OCI permission denied
+execute using ddexec should work: :
+ _____________________
+< You've been hacked! >
+ ---------------------
+   \
+    \
+        .--.
+       |o_o |
+       |:_/ |
+      //   \ \
+     (|     | )
+    /'\_   _/`\
+    \___)=(___/
+
+killing pod: : WARN[0001] StopSignal SIGTERM failed to stop container test in 1 seconds, resorting to SIGKILL
+```
+
+## To Build executable payload
+
+```bash
+# install the compiler and static libraries (on fedora/centos stream/RHEL)
+$ dnf install make gcc glibc-static
+
+# make everything
+$ make
+```
+
+The executable source is obfuscated, but it does:
+
+1. base64 decodes the stored string.
+2. gzip decodes the base64 decoded binary data.
+3. displays the text to the screen.
+4. is compiled statically, so it should run on most container images and host kernels.
+
+## Impact
+
+Yago's project highlights an important issue with current security strategies: you're never as secure as you think you are.
+
+By itself, it's not super dangerous on the surface:
+
+* you're running a program as the current user
+* hijacking a process that the current user already can access
+* downloading and running a program that the current user can already do
+
+None of that is novel or new.
+
+However, combined with addtional attacks and methods, then we have a big problem:
+
+* exploiting a vulnerability in a program.
+* the ability to download your own code to a secure space.
+* to run that code in a secure space.
+* if you can pipe the download directly into the script - then you don't even need write access to the file system.
+* implementing the offset and memory handling code in another language, or with rest API calls - would mean you don't even need a shell.
+* a payload could then attempt to exploit more weaknesses and elevate more privileges.
+
+Security is layers, and this proof of concept shows that you must always be vigilant against threats, and you must never believe a single, method nor technology will protect you by itself. Containers are a great tool, but they can not be the only tool.
