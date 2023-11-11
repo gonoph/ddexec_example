@@ -1,3 +1,8 @@
+# custom
+*.gz
+fake
+*~
+
 # Prerequisites
 *.d
 
