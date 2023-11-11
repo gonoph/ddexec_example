@@ -19,7 +19,7 @@ GET() {
 }
 
 e "Checking for podman or docker:"
-test -x /usr/bin/docker && CONTAINER=podman
+test -x /usr/bin/docker && CONTAINER=docker
 test -x /usr/bin/podman && CONTAINER=podman
 test -z "$CONTAINER" && echo "Need a container runtime: podman or docker not found" 1>&2 && exit -1
 ee $CONTAINER
