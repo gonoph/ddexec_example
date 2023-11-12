@@ -49,9 +49,11 @@ e "downloading compressed binary from this host to container: "
 $CONTAINER cp ./fake.gz test:/tmp/fake.gz
 ee done
 
-e "downloading ddexec.sh from github: "
-$CONTAINER exec test $(GET $WEB https://raw.githubusercontent.com/arget13/DDexec/main/ddexec.sh /tmp/ddexec.sh)
-ee done
+# e "downloading ddexec.sh from github: "
+# $CONTAINER exec test $(GET $WEB https://raw.githubusercontent.com/arget13/DDexec/main/ddexec.sh /tmp/ddexec.sh)
+# ee done
+
+DDEXEC=$(GET $WEB https://raw.githubusercontent.com/arget13/DDexec/main/ddexec.sh -)
 
 e "set /tmp/fake.gz to execute"
 $CONTAINER exec test chmod +x /tmp/fake.gz
@@ -65,5 +67,5 @@ ee ""
 set -e
 e "execute using ddexec should work: "
 echo
-$CONTAINER exec test sh -c "gzip -cd /tmp/fake.gz | base64 -w0 | sh /tmp/ddexec.sh fake"
+$CONTAINER exec test sh -c "gzip -cd /tmp/fake.gz | base64 -w0 | sh <($DDEXEC) fake"
 ee ""
