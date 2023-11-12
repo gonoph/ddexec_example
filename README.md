@@ -24,10 +24,10 @@ The [ddexec_test.bash](/ddexec_test.bash) script performs the following:
 1. tests if you have docker or podman on your system
 2. picks a container image:
     1. For RHEL, CentOS Stream, and Fedora: [UBI9][ubi9]
-    2. For Ubuntu, alpine, and others: [alpine][alpine]
+    2. For Ubuntu and alpine: [alpine][alpine]
 3. checks for wget or curl
 4. downloads via pipes to file descriptors so nothing is written to the file system
-    1. access fake.gz from releases and pipes to uncompress. What is does is [explained below](#to-build-executable-payload)
+    1. access fake.gz from releases and pipes to uncompress. What this does is [explained below](#to-build-executable-payload)
     2. access ddexec from Yago's repository and pipes it to a shell.
 5. runs the shell with the ddexec and fake.gz accessed as file descriptors.
 
@@ -76,7 +76,7 @@ execute using ddexec without writing any files:
 killing pod: WARN[0001] StopSignal SIGTERM failed to stop container test in 1 seconds, resorting to SIGKILL
 ```
 
-## To Build executable payload
+## To Build executable payload (optional)
 
 ```bash
 # install the compiler and static libraries (on fedora/centos stream/RHEL)
