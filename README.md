@@ -15,7 +15,7 @@ Essentially:
 * you can run any readable file
     * by injecting it into any currently running process
     * hijacking the process to run your program
-* all that is needed is a way to download a remote file
+* all that is needed is a way to access a remote file
 
 The author, [Yago][yago] implemented this in shell as a POC, but this could be implemented in any language.
 
@@ -26,13 +26,10 @@ The [ddexec_test.bash](/ddexec_test.bash) script performs the following:
     1. For RHEL, CentOS Stream, and Fedora: [UBI9][ubi9]
     2. For Ubuntu, alpine, and others: [alpine][alpine]
 3. checks for wget or curl
-4. copies fake.gz into the container [explained below](#fake_gz)
-5. Downloads ddexec to the container
-6. Tests the execution of fake.gz (should fail):
-    1. /tmp is mounted as noexec
-    2. the rest of the file system is read-only
-    3. the executable file is compressed (.gz)
-7. Tests the execution with ddexec - should succeed.
+4. downloads via pipes to file descriptors so nothing is written to the file system
+    1. access fake.gz from releases and pipes to uncompress. What is does is [explained below](#to-build-executable-payload)
+    2. access ddexec from Yago's repository and pipes it to a shell.
+5. runs the shell with the ddexec and fake.gz accessed as file descriptors.
 
 It'll display a silly [cowsay][cowsay].
 
@@ -59,14 +56,10 @@ Then, you just run the bash script:
 
 ```bash
 $ ./ddexec_test.bash
-Checking for podman or docker:: podman
-Starting READ-ONLY container with /tmp NOEXEC:: a31b298d0ad43f0fb64139cac8a314ac2bd0795e53bc5579a35ae22773f13d04
+Checking for podman or docker: podman
+Starting READ-ONLY container with /tmp NOEXEC: ebe36d79e23662f759c857eca1da4c144ae49e52ec57920706f40e538b8cca29
 Testing for curl or wget...: /usr/bin/curl
-downloading compressed binary from this host to container: : done
-downloading ddexec.sh from github: : done
-set /tmp/fake.gz to execute: done
-execute /tmp/fake.gz should fail: : Error: crun: open executable: Permission denied: OCI permission denied
-execute using ddexec should work: :
+execute using ddexec without writing any files:
  _____________________
 < You've been hacked! >
  ---------------------
@@ -80,7 +73,7 @@ execute using ddexec should work: :
     /'\_   _/`\
     \___)=(___/
 
-killing pod: : WARN[0001] StopSignal SIGTERM failed to stop container test in 1 seconds, resorting to SIGKILL
+killing pod: WARN[0001] StopSignal SIGTERM failed to stop container test in 1 seconds, resorting to SIGKILL
 ```
 
 ## To Build executable payload
@@ -117,7 +110,7 @@ However, combined with addtional attacks and methods, then we have a big problem
 * exploiting a vulnerability in a program.
 * the ability to download your own code to a secure space.
 * to run that code in a secure space.
-* if you can pipe the download directly into the script - then you don't even need write access to the file system.
+* piping the payload directly to the script, then no need to write any files.
 * implementing the offset and memory handling code in another language, or with rest API calls - would mean you don't even need a shell.
 * a payload could then attempt to exploit more weaknesses and elevate more privileges.
 
