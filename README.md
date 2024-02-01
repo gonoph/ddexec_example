@@ -114,4 +114,4 @@ However, combined with addtional attacks and methods, then we have a big problem
 * implementing the offset and memory handling code in another language, or with rest API calls - would mean you don't even need a shell.
 * a payload could then attempt to exploit more weaknesses and elevate more privileges.
 
-Security is layers, and this proof of concept shows that you must always be vigilant against threats, and you must never believe a single, method nor technology will protect you by itself. Containers are a great tool, but they must not be the only tool.
+Security is layers, and this proof of concept shows that you must always be vigilant against threats, and you must never believe a single method nor technology will protect you by itself. Containers are a great tool, but they must not be the only tool.
